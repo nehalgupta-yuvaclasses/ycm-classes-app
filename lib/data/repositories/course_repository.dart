@@ -209,14 +209,30 @@ class CourseRepository {
       moduleOrderById[row['id'] as String] = (row['order'] as int?) ?? 0;
     }
 
-    final lessonsResponse = moduleIds.isEmpty
-        ? const <Map<String, dynamic>>[]
-        : await _client
-            .from('lessons')
-        .select('id, module_id, title, video_url, notes, duration, "order", lesson_type, live_url, scheduled_at, is_live, live_started_at, live_ended_at, live_by')
-        .inFilter('module_id', moduleIds);
+    final curriculumResponse = await _client.rpc('get_course_curriculum', params: {'course_uuid': id});
+    final lessonRows = <Map<String, dynamic>>[];
+    final curriculumSubjects = curriculumResponse is List ? curriculumResponse : const <dynamic>[];
 
-    final lessonRows = List<Map<String, dynamic>>.from(lessonsResponse);
+    for (final subject in curriculumSubjects) {
+      if (subject is! Map<String, dynamic>) continue;
+      final modules = subject['modules'];
+      if (modules is! List) continue;
+
+      for (final module in modules) {
+        if (module is! Map<String, dynamic>) continue;
+        final moduleId = module['id']?.toString() ?? '';
+        if (moduleId.isEmpty) continue;
+        final lessons = module['lessons'];
+        if (lessons is! List) continue;
+
+        for (final lesson in lessons) {
+          if (lesson is Map<String, dynamic>) {
+            lessonRows.add(Map<String, dynamic>.from(lesson));
+          }
+        }
+      }
+    }
+
     lessonRows.sort((left, right) {
       final leftOrder = moduleOrderById[left['module_id'] as String? ?? ''] ?? 0;
       final rightOrder = moduleOrderById[right['module_id'] as String? ?? ''] ?? 0;

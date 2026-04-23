@@ -596,8 +596,8 @@ class _LessonTile extends StatelessWidget {
             ),
           ),
           SizedBox(width: 8.w),
-          if (isLiveLesson)
-            if (isLiveNow)
+          if (lesson.hasPlayback)
+            if (isLiveLesson && isLiveNow)
               SizedBox(
                 height: 36.h,
                 child: ElevatedButton(
@@ -612,7 +612,21 @@ class _LessonTile extends StatelessWidget {
                 ),
               )
             else
-              Container(
+              SizedBox(
+                height: 36.h,
+                child: ElevatedButton(
+                  onPressed: () => _openLiveClass(context),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: Colors.white,
+                    padding: EdgeInsets.symmetric(horizontal: 14.w),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.md)),
+                  ),
+                  child: Text((lesson.lessonType == 'recorded' || lesson.isRecordedReady) ? 'Watch Recording' : 'Open Lesson', style: TextStyle(fontSize: 12.sp, fontWeight: FontWeight.w700)),
+                ),
+              )
+          else
+            Container(
                 padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
                 decoration: BoxDecoration(
                   color: isEnded ? AppColors.divider : AppColors.background,
