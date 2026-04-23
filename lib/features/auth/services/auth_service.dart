@@ -10,8 +10,8 @@ import '../models/user_model.dart';
 
 class AuthService {
   AuthService({firebase.FirebaseAuth? firebaseAuth, GoogleSignIn? googleSignIn})
-      : _firebaseAuth = firebaseAuth ?? firebase.FirebaseAuth.instance,
-        _googleSignIn = googleSignIn ?? GoogleSignIn(scopes: const ['email']);
+    : _firebaseAuth = firebaseAuth ?? firebase.FirebaseAuth.instance,
+      _googleSignIn = googleSignIn ?? GoogleSignIn(scopes: const ['email']);
 
   final firebase.FirebaseAuth _firebaseAuth;
   final GoogleSignIn _googleSignIn;
@@ -22,9 +22,11 @@ class AuthService {
 
   supabase.User? get currentSupabaseUser => _supabaseClient.auth.currentUser;
 
-  Stream<firebase.User?> firebaseAuthStateChanges() => _firebaseAuth.authStateChanges();
+  Stream<firebase.User?> firebaseAuthStateChanges() =>
+      _firebaseAuth.authStateChanges();
 
-  Stream<supabase.AuthState> supabaseAuthStateChanges() => _supabaseClient.auth.onAuthStateChange;
+  Stream<supabase.AuthState> supabaseAuthStateChanges() =>
+      _supabaseClient.auth.onAuthStateChange;
 
   String normalizeIndianPhone(String rawPhone) {
     final trimmed = rawPhone.trim();
@@ -34,15 +36,20 @@ class AuthService {
       return '+91$digits';
     }
 
-    if (digits.length == 12 && digits.startsWith('91') && RegExp(r'^91[6-9]\d{9}$').hasMatch(digits)) {
+    if (digits.length == 12 &&
+        digits.startsWith('91') &&
+        RegExp(r'^91[6-9]\d{9}$').hasMatch(digits)) {
       return '+$digits';
     }
 
-    if (trimmed.startsWith('+91') && RegExp(r'^\+91[6-9]\d{9}$').hasMatch(trimmed.replaceAll(' ', ''))) {
+    if (trimmed.startsWith('+91') &&
+        RegExp(r'^\+91[6-9]\d{9}$').hasMatch(trimmed.replaceAll(' ', ''))) {
       return trimmed.replaceAll(' ', '');
     }
 
-    throw const AppError('Enter a valid Indian mobile number in +91XXXXXXXXXX format.');
+    throw const AppError(
+      'Enter a valid Indian mobile number in +91XXXXXXXXXX format.',
+    );
   }
 
   bool isValidIndianPhone(String rawPhone) {
@@ -57,7 +64,8 @@ class AuthService {
   Future<void> requestPhoneOtp({
     required String phoneNumber,
     required void Function(String verificationId, int? resendToken) onCodeSent,
-    required void Function(firebase.FirebaseAuthException error) onVerificationFailed,
+    required void Function(firebase.FirebaseAuthException error)
+    onVerificationFailed,
     required void Function(String verificationId) onAutoRetrievalTimeout,
     int? forceResendingToken,
   }) async {
@@ -87,7 +95,9 @@ class AuthService {
         verificationId: verificationId,
         smsCode: smsCode,
       );
-      final userCredential = await _firebaseAuth.signInWithCredential(credential);
+      final userCredential = await _firebaseAuth.signInWithCredential(
+        credential,
+      );
       return userCredential.user;
     } on firebase.FirebaseAuthException catch (error) {
       throw AppError(error.message ?? 'OTP verification failed.');
@@ -113,7 +123,9 @@ class AuthService {
         idToken: googleAuth.idToken,
       );
 
-      final userCredential = await _firebaseAuth.signInWithCredential(credential);
+      final userCredential = await _firebaseAuth.signInWithCredential(
+        credential,
+      );
       return userCredential.user;
     } on firebase.FirebaseAuthException catch (error) {
       throw AppError(error.message ?? 'Google sign-in failed.');
@@ -167,7 +179,8 @@ class AuthService {
     String? userId,
   }) async {
     final identifiers = <MapEntry<String, String>>[
-      if ((firebaseUid ?? '').trim().isNotEmpty) MapEntry('firebase_uid', firebaseUid!.trim()),
+      if ((firebaseUid ?? '').trim().isNotEmpty)
+        MapEntry('firebase_uid', firebaseUid!.trim()),
       if ((userId ?? '').trim().isNotEmpty) MapEntry('user_id', userId!.trim()),
       if ((phone ?? '').trim().isNotEmpty) MapEntry('phone', phone!.trim()),
       if ((email ?? '').trim().isNotEmpty) MapEntry('email', email!.trim()),
@@ -181,7 +194,9 @@ class AuthService {
           .limit(1);
 
       if (response.isNotEmpty) {
-        return UserModel.fromJson(Map<String, dynamic>.from(response.first as Map));
+        return UserModel.fromJson(
+          Map<String, dynamic>.from(response.first as Map),
+        );
       }
     }
 
@@ -201,8 +216,17 @@ class AuthService {
       final payload = merged.toJson();
 
       final response = existing == null
-          ? await _supabaseClient.from('students').insert(payload).select().single()
-          : await _supabaseClient.from('students').update(payload).eq('id', existing.id).select().single();
+          ? await _supabaseClient
+                .from('students')
+                .insert(payload)
+                .select()
+                .single()
+          : await _supabaseClient
+                .from('students')
+                .update(payload)
+                .eq('id', existing.id)
+                .select()
+                .single();
 
       return UserModel.fromJson(Map<String, dynamic>.from(response as Map));
     } on supabase.PostgrestException catch (error) {
@@ -224,5 +248,42 @@ class AuthService {
   Future<void> signOutAll() async {
     await signOutFirebase();
     await signOutSupabase();
+  }
+
+  /// Ensures that a corresponding row exists in the `users` table for a Firebase user,
+  /// and links the `students` record to it via `user_id`.
+  ///
+  /// This is required for Edge Function authorization, which expects to find
+  /// the user in `public.users` (by user_id) after resolving the Firebase UID from `students`.
+  Future<void> ensureFirebaseUserIdentityAndLink({
+    required String studentId,
+    required String email,
+    required String fullName,
+    required String firebaseUid,
+  }) async {
+    final userId = studentId; // 1:1 mapping between students and users
+
+    try {
+      await _supabaseClient.from('users').upsert({
+        'id': userId,
+        'email': email,
+        'name': fullName,
+        'full_name': fullName,
+        'firebase_uid': firebaseUid,
+        'role': 'student',
+      }, onConflict: 'id');
+    } on supabase.PostgrestException catch (e) {
+      // Log and rethrow? For now, we let it bubble to not break auth
+      throw AppError('Failed to create user identity: ${e.message}');
+    }
+
+    try {
+      await _supabaseClient
+          .from('students')
+          .update({'user_id': userId})
+          .eq('id', studentId);
+    } on supabase.PostgrestException catch (e) {
+      throw AppError('Failed to link student to user: ${e.message}');
+    }
   }
 }

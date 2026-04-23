@@ -41,7 +41,8 @@ class RazorpayOrderResponse {
 }
 
 class PaymentRemoteService {
-  PaymentRemoteService({SupabaseClient? client}) : _client = client ?? SupabaseClientManager.client;
+  PaymentRemoteService({SupabaseClient? client})
+    : _client = client ?? SupabaseClientManager.client;
 
   final SupabaseClient _client;
 
@@ -63,10 +64,7 @@ class PaymentRemoteService {
   }) async {
     final response = await _invoke(
       'create_razorpay_order',
-      payload: {
-        'courseId': courseId,
-        'amount': amount,
-      },
+      payload: {'courseId': courseId, 'amount': amount, 'source': 'mobile'},
     );
 
     return RazorpayOrderResponse(
@@ -91,21 +89,25 @@ class PaymentRemoteService {
         'razorpay_payment_id': paymentId,
         'razorpay_order_id': orderId,
         'razorpay_signature': signature,
+        'source': 'mobile',
       },
     );
   }
 
-  Future<Map<String, dynamic>> _invoke(String action, {Map<String, dynamic> payload = const {}}) async {
+  Future<Map<String, dynamic>> _invoke(
+    String action, {
+    Map<String, dynamic> payload = const {},
+  }) async {
     final supabaseToken = _client.auth.currentSession?.accessToken;
-    final firebaseToken = await firebase.FirebaseAuth.instance.currentUser?.getIdToken(true);
+    final firebaseToken = await firebase.FirebaseAuth.instance.currentUser
+        ?.getIdToken(true);
     final bearerToken = supabaseToken ?? firebaseToken;
     final response = await _client.functions.invoke(
       'razorpay-payments',
-      body: {
-        'action': action,
-        ...payload,
-      },
-      headers: bearerToken == null ? null : {'Authorization': 'Bearer $bearerToken'},
+      body: {'action': action, ...payload},
+      headers: bearerToken == null
+          ? null
+          : {'Authorization': 'Bearer $bearerToken'},
     );
 
     final data = response.data;
@@ -124,7 +126,9 @@ class PaymentRemoteService {
   }
 
   String _friendlyPaymentError(dynamic data) {
-    final rawMessage = data is Map && data['error'] != null ? data['error'].toString() : 'Payment request failed';
+    final rawMessage = data is Map && data['error'] != null
+        ? data['error'].toString()
+        : 'Payment request failed';
 
     if (rawMessage.contains('UNAUTHORIZED_UNSUPPORTED_TOKEN_ALGORITHM') ||
         rawMessage.contains('Unsupported JWT algorithm') ||
