@@ -1,20 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_text_styles.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_radius.dart';
+import '../../../batch/presentation/providers/batch_providers.dart';
 
-class CoursePlayerScreen extends StatefulWidget {
+class CoursePlayerScreen extends ConsumerStatefulWidget {
   final String courseId;
   const CoursePlayerScreen({super.key, required this.courseId});
 
   @override
-  State<CoursePlayerScreen> createState() => _CoursePlayerScreenState();
+  ConsumerState<CoursePlayerScreen> createState() => _CoursePlayerScreenState();
 }
 
-class _CoursePlayerScreenState extends State<CoursePlayerScreen> with SingleTickerProviderStateMixin {
+class _CoursePlayerScreenState extends ConsumerState<CoursePlayerScreen> with SingleTickerProviderStateMixin {
   late TabController _tabController;
 
 
@@ -39,6 +41,16 @@ class _CoursePlayerScreenState extends State<CoursePlayerScreen> with SingleTick
 
   @override
   Widget build(BuildContext context) {
+    final enrolledAsync = ref.watch(myBatchesProvider);
+    final isEnrolled = enrolledAsync.maybeWhen(
+      data: (batches) => batches.any((batch) => batch.id == widget.courseId),
+      orElse: () => false,
+    );
+
+    if (!isEnrolled) {
+      return _buildAccessDenied(context);
+    }
+
     return Scaffold(
       backgroundColor: AppColors.background,
       body: Column(
@@ -209,6 +221,32 @@ class _CoursePlayerScreenState extends State<CoursePlayerScreen> with SingleTick
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildAccessDenied(BuildContext context) {
+    return Scaffold(
+      backgroundColor: AppColors.background,
+      body: Center(
+        child: Padding(
+          padding: EdgeInsets.all(32.w),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.lock_rounded, color: AppColors.textTertiary, size: 56.sp),
+              SizedBox(height: 16.h),
+              Text('Enrollment required', style: AppTextStyles.heading3, textAlign: TextAlign.center),
+              SizedBox(height: 8.h),
+              Text('Purchase the course to access the player and lesson list.', style: AppTextStyles.bodySm, textAlign: TextAlign.center),
+              SizedBox(height: 20.h),
+              ElevatedButton(
+                onPressed: () => context.push('/checkout/${widget.courseId}'),
+                child: const Text('Go to checkout'),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

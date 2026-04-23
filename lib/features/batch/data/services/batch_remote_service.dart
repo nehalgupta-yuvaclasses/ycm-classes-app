@@ -13,9 +13,9 @@ class BatchRemoteService {
     final response = await _client
         .from('enrollments')
         .select(
-          'id, student_id, course_id, created_at, courses(id, title, description, thumbnail_url, buying_price, selling_price, author, subtitle, category, visibility, instructor_id, instructors(full_name, profile_image), modules(id, lessons(id)))',
+          'id, student_id, user_id, course_id, created_at, courses(id, title, description, thumbnail_url, buying_price, selling_price, author, subtitle, category, visibility, instructor_id, instructors(full_name, profile_image), modules(id, lessons(id)))',
         )
-        .eq('student_id', userId)
+        .or('student_id.eq.$userId,user_id.eq.$userId')
         .order('created_at', ascending: false);
 
     final List<dynamic> data = response;
@@ -23,7 +23,7 @@ class BatchRemoteService {
   }
 
   Stream<List<Map<String, dynamic>>> watchEnrollments(String userId) {
-    return _client.from('enrollments').stream(primaryKey: ['id']).eq('student_id', userId);
+    return _client.from('enrollments').stream(primaryKey: ['id']).or('student_id.eq.$userId,user_id.eq.$userId');
   }
 
   Future<void> updateLessonProgress({
