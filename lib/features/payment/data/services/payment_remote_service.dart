@@ -1,4 +1,5 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:firebase_auth/firebase_auth.dart' as firebase;
 
 import '../../../../core/supabase/supabase_client.dart';
 import '../../../../core/utils/app_error.dart';
@@ -96,13 +97,15 @@ class PaymentRemoteService {
 
   Future<Map<String, dynamic>> _invoke(String action, {Map<String, dynamic> payload = const {}}) async {
     final supabaseToken = _client.auth.currentSession?.accessToken;
+    final firebaseToken = await firebase.FirebaseAuth.instance.currentUser?.getIdToken(true);
+    final bearerToken = supabaseToken ?? firebaseToken;
     final response = await _client.functions.invoke(
       'razorpay-payments',
       body: {
         'action': action,
         ...payload,
       },
-      headers: supabaseToken == null ? null : {'Authorization': 'Bearer $supabaseToken'},
+      headers: bearerToken == null ? null : {'Authorization': 'Bearer $bearerToken'},
     );
 
     final data = response.data;

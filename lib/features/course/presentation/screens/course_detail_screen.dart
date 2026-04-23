@@ -605,6 +605,7 @@ class _LessonTile extends StatelessWidget {
           if (lesson.hasPlayback)
             if (isLiveLesson && isLiveNow)
               SizedBox(
+                width: 124.w,
                 height: 36.h,
                 child: ElevatedButton(
                   onPressed: () => _openLiveClass(context),
@@ -619,6 +620,7 @@ class _LessonTile extends StatelessWidget {
               )
             else
               SizedBox(
+                width: 124.w,
                 height: 36.h,
                 child: ElevatedButton(
                   onPressed: () => _openLiveClass(context),
@@ -633,25 +635,16 @@ class _LessonTile extends StatelessWidget {
               )
           else
             Container(
-                padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
-                decoration: BoxDecoration(
-                  color: isEnded ? AppColors.divider : AppColors.background,
-                  borderRadius: BorderRadius.circular(AppRadius.md),
-                  border: Border.all(color: AppColors.border.withValues(alpha: 0.7)),
-                ),
-                child: Text(
-                  isEnded ? 'Class Ended' : 'Not Live Yet',
-                  style: TextStyle(fontSize: 11.sp, fontWeight: FontWeight.w600, color: AppColors.textTertiary),
-                ),
-              )
-          else
-            Container(
-              padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 3.h),
+              padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
               decoration: BoxDecoration(
-                color: AppColors.successLight,
-                borderRadius: BorderRadius.circular(AppRadius.pill),
+                color: isEnded ? AppColors.divider : AppColors.background,
+                borderRadius: BorderRadius.circular(AppRadius.md),
+                border: Border.all(color: AppColors.border.withValues(alpha: 0.7)),
               ),
-              child: Text('WATCH', style: TextStyle(fontSize: 10.sp, fontWeight: FontWeight.w700, color: AppColors.success)),
+              child: Text(
+                isEnded ? 'Class Ended' : 'Not Live Yet',
+                style: TextStyle(fontSize: 11.sp, fontWeight: FontWeight.w600, color: AppColors.textTertiary),
+              ),
             ),
         ],
       ),
