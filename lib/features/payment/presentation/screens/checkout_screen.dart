@@ -9,6 +9,7 @@ import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_radius.dart';
 import '../../../course/presentation/providers/course_providers.dart';
 import '../../../course/domain/models/course_model.dart';
+import '../../../batch/presentation/providers/batch_providers.dart';
 import '../../data/services/payment_remote_service.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -100,6 +101,34 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
     }
 
     final courseAsync = ref.watch(courseDetailProvider(widget.courseId));
+    final enrolledAsync = ref.watch(myBatchesProvider);
+    final isEnrolled = enrolledAsync.maybeWhen(
+      data: (batches) => batches.any((batch) => batch.id == widget.courseId),
+      orElse: () => false,
+    );
+
+    if (isEnrolled) {
+      return Center(
+        child: Padding(
+          padding: EdgeInsets.all(32.w),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.verified_rounded, color: AppColors.success, size: 52.sp),
+              SizedBox(height: 16.h),
+              Text('You are already enrolled.', style: AppTextStyles.heading3, textAlign: TextAlign.center),
+              SizedBox(height: 8.h),
+              Text('Open the course to continue learning.', style: AppTextStyles.bodySm, textAlign: TextAlign.center),
+              SizedBox(height: 20.h),
+              ElevatedButton(
+                onPressed: () => context.pushReplacement('/course/${widget.courseId}/player'),
+                child: const Text('Open course'),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
 
     return courseAsync.when(
       loading: () => Center(

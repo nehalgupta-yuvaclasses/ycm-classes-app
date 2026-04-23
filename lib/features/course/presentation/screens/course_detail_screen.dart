@@ -10,6 +10,7 @@ import '../../../../core/constants/app_text_styles.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_radius.dart';
 import '../providers/course_providers.dart';
+import '../../../batch/presentation/providers/batch_providers.dart';
 import '../../domain/models/course_model.dart';
 import 'live_class_screen.dart';
 
@@ -20,18 +21,23 @@ class CourseDetailScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final courseAsync = ref.watch(courseDetailProvider(courseId));
+    final enrolledAsync = ref.watch(myBatchesProvider);
+    final isEnrolled = enrolledAsync.maybeWhen(
+      data: (batches) => batches.any((batch) => batch.id == courseId),
+      orElse: () => false,
+    );
 
     return Scaffold(
       backgroundColor: AppColors.background,
       body: courseAsync.when(
-        data: (course) => _buildContent(context, course),
+        data: (course) => _buildContent(context, course, isEnrolled),
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, _) => Center(child: Text('Error: $error')),
       ),
     );
   }
 
-  Widget _buildContent(BuildContext context, CourseModel course) {
+  Widget _buildContent(BuildContext context, CourseModel course, bool isEnrolled) {
     final lessonCount = course.lessons?.length ?? 0;
     final liveLessonCount = _liveLessonCount(course);
     final recordedLessonCount = _recordedLessonCount(course);
@@ -260,7 +266,7 @@ class CourseDetailScreen extends ConsumerWidget {
           ),
         ),
         // 3. PURCHASE BAR
-        _buildPurchaseBar(context, course),
+        _buildPurchaseBar(context, course, isEnrolled),
       ],
     );
   }
@@ -288,7 +294,7 @@ class CourseDetailScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildPurchaseBar(BuildContext context, CourseModel course) {
+  Widget _buildPurchaseBar(BuildContext context, CourseModel course, bool isEnrolled) {
     return Container(
       padding: EdgeInsets.fromLTRB(AppSpacing.screenPadding, 16.h, AppSpacing.screenPadding, 16.h + ScreenUtil().bottomBarHeight),
       decoration: BoxDecoration(
@@ -317,7 +323,7 @@ class CourseDetailScreen extends ConsumerWidget {
             child: SizedBox(
               height: 56.h,
               child: ElevatedButton(
-                onPressed: () => context.push('/checkout/${course.id}'),
+                onPressed: () => context.push(isEnrolled ? '/course/${course.id}/player' : '/checkout/${course.id}'),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.primary,
                   foregroundColor: Colors.white,
@@ -325,7 +331,7 @@ class CourseDetailScreen extends ConsumerWidget {
                   shadowColor: Colors.transparent,
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.lg)),
                 ),
-                child: Text('Get Full Access', style: AppTextStyles.button),
+                child: Text(isEnrolled ? 'Open Course' : 'Get Full Access', style: AppTextStyles.button),
               ),
             ),
           ),
