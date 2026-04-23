@@ -191,8 +191,11 @@ class LessonModel {
   final String duration;
   final String? scheduledAt;
   final String? videoUrl;
+  final String? youtubeLiveUrl;
+  final String? youtubeRecordingUrl;
   final String? liveUrl;
   final bool isLive;
+  final bool isRecordedReady;
   final DateTime? liveStartedAt;
   final DateTime? liveEndedAt;
   final String? liveBy;
@@ -207,8 +210,11 @@ class LessonModel {
     required this.duration,
     this.scheduledAt,
     this.videoUrl,
+    this.youtubeLiveUrl,
+    this.youtubeRecordingUrl,
     this.liveUrl,
     this.isLive = false,
+    this.isRecordedReady = false,
     this.liveStartedAt,
     this.liveEndedAt,
     this.liveBy,
@@ -236,9 +242,12 @@ class LessonModel {
           : lessonType,
       duration: _readString(json['duration']),
       videoUrl: _readString(json['video_url'], ''),
+      youtubeLiveUrl: _readString(json['youtube_live_url'], ''),
+      youtubeRecordingUrl: _readString(json['youtube_recording_url'], ''),
       liveUrl: _readString(json['live_url'], ''),
       scheduledAt: _readString(json['scheduled_at'], ''),
       isLive: isLive,
+      isRecordedReady: _readBool(json['is_recorded_ready']) ?? false,
       liveStartedAt: _readDateTime(json['live_started_at']),
       liveEndedAt: _readDateTime(json['live_ended_at']),
       liveBy: _readString(json['live_by'], ''),
@@ -254,14 +263,21 @@ class LessonModel {
   bool get hasEnded => isLiveSession && !isLive && liveEndedAt != null;
   bool get canJoin => isLiveSession && isLive;
   bool get isScheduled => isLiveSession && !isLive && liveEndedAt == null;
+  bool get hasPlayback => canJoin || isRecordedReady || (youtubeRecordingUrl?.isNotEmpty == true) || (videoUrl?.isNotEmpty == true);
+  String? get effectivePlaybackUrl => canJoin
+      ? (youtubeLiveUrl?.isNotEmpty == true ? youtubeLiveUrl : liveUrl)
+      : (youtubeRecordingUrl?.isNotEmpty == true ? youtubeRecordingUrl : videoUrl);
 
   LessonModel copyWith({
     String? title,
     String? duration,
     String? videoUrl,
+    String? youtubeLiveUrl,
+    String? youtubeRecordingUrl,
     String? liveUrl,
     String? scheduledAt,
     bool? isLive,
+    bool? isRecordedReady,
     DateTime? liveStartedAt,
     DateTime? liveEndedAt,
     String? liveBy,
@@ -277,8 +293,11 @@ class LessonModel {
       duration: duration ?? this.duration,
       scheduledAt: scheduledAt ?? this.scheduledAt,
       videoUrl: videoUrl ?? this.videoUrl,
+      youtubeLiveUrl: youtubeLiveUrl ?? this.youtubeLiveUrl,
+      youtubeRecordingUrl: youtubeRecordingUrl ?? this.youtubeRecordingUrl,
       liveUrl: liveUrl ?? this.liveUrl,
       isLive: isLive ?? this.isLive,
+      isRecordedReady: isRecordedReady ?? this.isRecordedReady,
       liveStartedAt: liveStartedAt ?? this.liveStartedAt,
       liveEndedAt: liveEndedAt ?? this.liveEndedAt,
       liveBy: liveBy ?? this.liveBy,
