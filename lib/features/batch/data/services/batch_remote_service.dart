@@ -10,20 +10,46 @@ class BatchRemoteService {
   final SupabaseClient _client;
 
   Future<List<BatchModel>> getMyBatches(String userId) async {
-    final response = await _client
-        .from('enrollments')
-        .select(
-          'id, student_id, user_id, course_id, created_at, courses(id, title, description, thumbnail_url, buying_price, selling_price, author, subtitle, category, visibility, instructor_id, instructors(full_name, profile_image), modules(id, lessons(id)))',
-        )
-        .or('student_id.eq.$userId,user_id.eq.$userId')
-        .order('created_at', ascending: false);
+    final selectClause =
+        'id, student_id, user_id, course_id, created_at, courses(id, title, description, thumbnail_url, buying_price, selling_price, author, subtitle, category, visibility, instructor_id, instructors(full_name, profile_image), modules(id, lessons(id)))';
 
-    final List<dynamic> data = response;
-    return data.map((json) => BatchModel.fromJson(json)).toList();
+    final responses = await Future.wait([
+      _client
+          .from('enrollments')
+          .select(selectClause)
+          .eq('user_id', userId)
+          .order('created_at', ascending: false),
+      _client
+          .from('enrollments')
+          .select(selectClause)
+          .eq('student_id', userId)
+          .order('created_at', ascending: false),
+    ]);
+
+    final merged = <String, Map<String, dynamic>>{};
+    for (final response in responses) {
+      final data = List<dynamic>.from(response as List<dynamic>);
+      for (final row in data) {
+        if (row is Map<String, dynamic>) {
+          final key = row['course_id']?.toString() ?? row['id']?.toString() ?? '';
+          if (key.isNotEmpty) {
+            merged[key] = row;
+          }
+        }
+      }
+    }
+
+    return merged.values.map((json) => BatchModel.fromJson(json)).toList();
   }
 
   Stream<List<Map<String, dynamic>>> watchEnrollments(String userId) {
-    return _client.from('enrollments').stream(primaryKey: ['id']).or('student_id.eq.$userId,user_id.eq.$userId');
+    return _client.from('enrollments').stream(primaryKey: ['id']).map((rows) {
+      return rows.where((row) {
+        final rowUserId = row['user_id']?.toString();
+        final rowStudentId = row['student_id']?.toString();
+        return rowUserId == userId || rowStudentId == userId;
+      }).toList();
+    });
   }
 
   Future<void> updateLessonProgress({
