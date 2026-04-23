@@ -13,12 +13,13 @@ final authServiceProvider = Provider<AuthService>((ref) {
   return AuthService();
 });
 
-final authControllerProvider = StateNotifierProvider<AuthController, AuthViewState>((ref) {
-  return AuthController(
-    authService: ref.read(authServiceProvider),
-    storageService: ref.read(storageServiceProvider),
-  );
-});
+final authControllerProvider =
+    StateNotifierProvider<AuthController, AuthViewState>((ref) {
+      return AuthController(
+        authService: ref.read(authServiceProvider),
+        storageService: ref.read(storageServiceProvider),
+      );
+    });
 
 final splashFinishedProvider = StateProvider<bool>((ref) => false);
 
@@ -26,9 +27,9 @@ class AuthController extends StateNotifier<AuthViewState> {
   AuthController({
     required AuthService authService,
     required StorageService storageService,
-  })  : _authService = authService,
-        _storageService = storageService,
-        super(AuthViewState.initial) {
+  }) : _authService = authService,
+       _storageService = storageService,
+       super(AuthViewState.initial) {
     _bootstrap();
   }
 
@@ -46,19 +47,27 @@ class AuthController extends StateNotifier<AuthViewState> {
     }
 
     _bootstrapping = true;
-    state = state.copyWith(status: AuthStatus.loading, restoringSession: true, clearError: true);
+    state = state.copyWith(
+      status: AuthStatus.loading,
+      restoringSession: true,
+      clearError: true,
+    );
 
     try {
       await _restorePendingOtp();
       await _reconcileSession();
 
       _firebaseSubscription?.cancel();
-      _firebaseSubscription = _authService.firebaseAuthStateChanges().listen((_) {
+      _firebaseSubscription = _authService.firebaseAuthStateChanges().listen((
+        _,
+      ) {
         _reconcileSession();
       });
 
       _supabaseSubscription?.cancel();
-      _supabaseSubscription = _authService.supabaseAuthStateChanges().listen((_) {
+      _supabaseSubscription = _authService.supabaseAuthStateChanges().listen((
+        _,
+      ) {
         _reconcileSession();
       });
     } catch (error) {
@@ -116,14 +125,21 @@ class AuthController extends StateNotifier<AuthViewState> {
         return;
       }
 
-      if ((lastMethod == AuthMethod.firebasePhone.name || lastMethod == AuthMethod.google.name) &&
+      if ((lastMethod == AuthMethod.firebasePhone.name ||
+              lastMethod == AuthMethod.google.name) &&
           firebaseUser != null) {
-        await _syncFirebaseUser(firebaseUser, preferredMethod: _parseMethod(lastMethod));
+        await _syncFirebaseUser(
+          firebaseUser,
+          preferredMethod: _parseMethod(lastMethod),
+        );
         return;
       }
 
       if (firebaseUser != null) {
-        await _syncFirebaseUser(firebaseUser, preferredMethod: AuthMethod.firebasePhone);
+        await _syncFirebaseUser(
+          firebaseUser,
+          preferredMethod: AuthMethod.firebasePhone,
+        );
         return;
       }
 
@@ -171,7 +187,8 @@ class AuthController extends StateNotifier<AuthViewState> {
     if (!_authService.isValidIndianPhone(phoneNumber)) {
       state = state.copyWith(
         status: AuthStatus.error,
-        errorMessage: 'Enter a valid Indian mobile number in +91XXXXXXXXXX format.',
+        errorMessage:
+            'Enter a valid Indian mobile number in +91XXXXXXXXXX format.',
       );
       return;
     }
@@ -269,7 +286,10 @@ class AuthController extends StateNotifier<AuthViewState> {
     try {
       final firebaseUser = await _authService.signInWithGoogle();
       if (firebaseUser == null) {
-        state = state.copyWith(status: AuthStatus.unauthenticated, clearError: true);
+        state = state.copyWith(
+          status: AuthStatus.unauthenticated,
+          clearError: true,
+        );
         return;
       }
 
@@ -291,7 +311,10 @@ class AuthController extends StateNotifier<AuthViewState> {
     try {
       final supabaseUser = await _authService.signInWithEmail(email, password);
       if (supabaseUser == null) {
-        state = state.copyWith(status: AuthStatus.unauthenticated, clearError: true);
+        state = state.copyWith(
+          status: AuthStatus.unauthenticated,
+          clearError: true,
+        );
         return;
       }
 
@@ -316,12 +339,16 @@ class AuthController extends StateNotifier<AuthViewState> {
         throw const AppError('Account creation failed.');
       }
 
-      final activeSupabaseUser = _authService.currentSupabaseUser ??
-          await _authService.signInWithEmail(email, password).catchError((_) => null);
+      final activeSupabaseUser =
+          _authService.currentSupabaseUser ??
+          await _authService
+              .signInWithEmail(email, password)
+              .catchError((_) => null);
       if (activeSupabaseUser == null) {
         state = state.copyWith(
           status: AuthStatus.error,
-          errorMessage: 'Account created. Please verify your email and sign in again.',
+          errorMessage:
+              'Account created. Please verify your email and sign in again.',
         );
         return;
       }
@@ -330,14 +357,15 @@ class AuthController extends StateNotifier<AuthViewState> {
       await _authService.signOutFirebase();
       await _clearPendingOtp();
 
-      final draft = UserModel.empty(
-        userId: activeSupabaseUser.id,
-        email: activeSupabaseUser.email ?? email,
-      ).copyWith(
-        fullName: fullName,
-        email: activeSupabaseUser.email ?? email,
-        userId: activeSupabaseUser.id,
-      );
+      final draft =
+          UserModel.empty(
+            userId: activeSupabaseUser.id,
+            email: activeSupabaseUser.email ?? email,
+          ).copyWith(
+            fullName: fullName,
+            email: activeSupabaseUser.email ?? email,
+            userId: activeSupabaseUser.id,
+          );
 
       final existing = await _authService.findStudentProfile(
         userId: activeSupabaseUser.id,
@@ -345,7 +373,9 @@ class AuthController extends StateNotifier<AuthViewState> {
       );
 
       if (existing != null && existing.hasRequiredProfile) {
-        final saved = await _authService.upsertStudentProfile(existing.mergeWith(draft));
+        final saved = await _authService.upsertStudentProfile(
+          existing.mergeWith(draft),
+        );
         state = state.copyWith(
           status: AuthStatus.authenticated,
           user: saved,
@@ -400,7 +430,27 @@ class AuthController extends StateNotifier<AuthViewState> {
         email: resolvedEmail,
         aspirantType: aspirantType,
       );
-      final saved = await _authService.upsertStudentProfile(updatedProfile);
+      var saved = await _authService.upsertStudentProfile(updatedProfile);
+
+      // If Firebase auth and not yet linked, ensure identity row exists in 'users' and link
+      final firebaseUid = currentUser.firebaseUid;
+      if (firebaseUid != null &&
+          firebaseUid.isNotEmpty &&
+          saved.userId == null) {
+        try {
+          await _authService.ensureFirebaseUserIdentityAndLink(
+            studentId: saved.id,
+            email: saved.email,
+            fullName: saved.fullName,
+            firebaseUid: firebaseUid,
+          );
+          saved = saved.copyWith(userId: saved.id);
+        } catch (e) {
+          // Log but don't fail onboarding
+          print('Identity sync error during onboarding: $e');
+        }
+      }
+
       state = state.copyWith(
         status: AuthStatus.authenticated,
         user: saved,
@@ -469,7 +519,9 @@ class AuthController extends StateNotifier<AuthViewState> {
       userId: existing?.userId,
       fullName: existing?.fullName.trim().isNotEmpty == true
           ? existing!.fullName
-          : (firebaseUser.displayName?.trim().isNotEmpty == true ? firebaseUser.displayName!.trim() : ''),
+          : (firebaseUser.displayName?.trim().isNotEmpty == true
+                ? firebaseUser.displayName!.trim()
+                : ''),
       email: existing?.email.trim().isNotEmpty == true
           ? existing!.email
           : (firebaseUser.email?.trim() ?? ''),
@@ -482,7 +534,8 @@ class AuthController extends StateNotifier<AuthViewState> {
       updatedAt: existing?.updatedAt,
     );
 
-    final shouldShowOnboarding = existing == null || !authDraft.hasRequiredProfile;
+    final shouldShowOnboarding =
+        existing == null || !authDraft.hasRequiredProfile;
     if (shouldShowOnboarding) {
       state = state.copyWith(
         status: AuthStatus.needsOnboarding,
@@ -496,7 +549,24 @@ class AuthController extends StateNotifier<AuthViewState> {
       return;
     }
 
-    final saved = await _authService.upsertStudentProfile(authDraft);
+    var saved = await _authService.upsertStudentProfile(authDraft);
+
+    // If not yet linked to a public.users identity, create and link
+    if (saved.userId == null) {
+      try {
+        await _authService.ensureFirebaseUserIdentityAndLink(
+          studentId: saved.id,
+          email: saved.email,
+          fullName: saved.fullName,
+          firebaseUid: firebaseUser.uid,
+        );
+        saved = saved.copyWith(userId: saved.id);
+      } catch (e) {
+        // Identity sync should not break login; log and continue
+        print('Identity sync error: $e');
+      }
+    }
+
     state = state.copyWith(
       status: AuthStatus.authenticated,
       user: saved,
@@ -533,7 +603,8 @@ class AuthController extends StateNotifier<AuthViewState> {
       updatedAt: existing?.updatedAt,
     );
 
-    final shouldShowOnboarding = existing == null || !authDraft.hasRequiredProfile;
+    final shouldShowOnboarding =
+        existing == null || !authDraft.hasRequiredProfile;
     if (shouldShowOnboarding) {
       state = state.copyWith(
         status: AuthStatus.needsOnboarding,
@@ -609,10 +680,12 @@ class AuthController extends StateNotifier<AuthViewState> {
     if (lower.contains('too-many-requests')) {
       return 'Too many attempts. Please wait before retrying.';
     }
-    if (lower.contains('app-not-authorized') || lower.contains('invalid app info in play_integrity_token')) {
+    if (lower.contains('app-not-authorized') ||
+        lower.contains('invalid app info in play_integrity_token')) {
       return 'Firebase phone auth is still blocked for this Android build. Recheck the Android app SHA-1 and SHA-256 in Firebase Console, then download the updated google-services.json.';
     }
-    if (lower.contains('user-cancelled-authorize') || lower.contains('sign in cancelled')) {
+    if (lower.contains('user-cancelled-authorize') ||
+        lower.contains('sign in cancelled')) {
       return 'Google sign-in was cancelled.';
     }
     if (lower.contains('invalid-email')) {
