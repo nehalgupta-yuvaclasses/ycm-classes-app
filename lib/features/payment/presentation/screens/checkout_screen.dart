@@ -22,7 +22,6 @@ class CheckoutScreen extends ConsumerStatefulWidget {
 }
 
 class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
-  int _selectedPayment = 0;
   late final Razorpay _razorpay;
   late final PaymentRemoteService _paymentRemoteService;
   double _gstRate = 18;
@@ -31,13 +30,6 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
   bool _isVerifyingPayment = false;
   bool _isLoadingPaymentConfig = true;
   String? _paymentMessage;
-
-  final List<Map<String, dynamic>> _paymentMethods = [
-    {'icon': Icons.phone_android_rounded, 'name': 'UPI', 'desc': 'Google Pay, PhonePe, Paytm'},
-    {'icon': Icons.credit_card_rounded, 'name': 'Credit / Debit Card', 'desc': 'Visa, Mastercard, RuPay'},
-    {'icon': Icons.account_balance_wallet_rounded, 'name': 'Wallets', 'desc': 'Amazon Pay, MobiKwik'},
-    {'icon': Icons.account_balance_rounded, 'name': 'Net Banking', 'desc': 'All Indian Banks'},
-  ];
 
   @override
   void initState() {
@@ -84,13 +76,20 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
             ),
             child: IconButton(
               onPressed: () => context.pop(),
-              icon: Icon(Icons.arrow_back_rounded, color: AppColors.textPrimary, size: 20.sp),
+              icon: Icon(
+                Icons.arrow_back_rounded,
+                color: AppColors.textPrimary,
+                size: 20.sp,
+              ),
               padding: EdgeInsets.zero,
             ),
           ),
         ),
       ),
-      title: Text('Checkout', style: AppTextStyles.heading3.copyWith(fontSize: 18.sp)),
+      title: Text(
+        'Checkout',
+        style: AppTextStyles.heading3.copyWith(fontSize: 18.sp),
+      ),
     );
   }
 
@@ -114,14 +113,28 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(Icons.verified_rounded, color: AppColors.success, size: 52.sp),
+              Icon(
+                Icons.verified_rounded,
+                color: AppColors.success,
+                size: 52.sp,
+              ),
               SizedBox(height: 16.h),
-              Text('You are already enrolled.', style: AppTextStyles.heading3, textAlign: TextAlign.center),
+              Text(
+                'You are already enrolled.',
+                style: AppTextStyles.heading3,
+                textAlign: TextAlign.center,
+              ),
               SizedBox(height: 8.h),
-              Text('Open the course to continue learning.', style: AppTextStyles.bodySm, textAlign: TextAlign.center),
+              Text(
+                'Open the course to continue learning.',
+                style: AppTextStyles.bodySm,
+                textAlign: TextAlign.center,
+              ),
               SizedBox(height: 20.h),
               ElevatedButton(
-                onPressed: () => context.pushReplacement('/course/${widget.courseId}/player'),
+                onPressed: () => context.pushReplacement(
+                  '/course/${widget.courseId}/player',
+                ),
                 child: const Text('Open course'),
               ),
             ],
@@ -156,7 +169,11 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.error_outline_rounded, color: AppColors.error, size: 48.sp),
+            Icon(
+              Icons.error_outline_rounded,
+              color: AppColors.error,
+              size: 48.sp,
+            ),
             SizedBox(height: 16.h),
             Text(
               message,
@@ -204,9 +221,13 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
                 _buildStatusBanner(_paymentMessage!),
                 SizedBox(height: 16.h),
               ],
-              _buildPriceSummaryCard(price, originalPriceValue, hasDiscount, gstAmount, finalAmount),
-              SizedBox(height: 20.h),
-              _buildPaymentMethodSection(),
+              _buildPriceSummaryCard(
+                price,
+                originalPriceValue,
+                hasDiscount,
+                gstAmount,
+                finalAmount,
+              ),
               SizedBox(height: 20.h),
               _buildCheckoutInfoCard(),
             ],
@@ -242,14 +263,19 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
                   children: [
                     Text(
                       course.title,
-                      style: AppTextStyles.heading4.copyWith(fontSize: 17.sp, height: 1.25),
+                      style: AppTextStyles.heading4.copyWith(
+                        fontSize: 17.sp,
+                        height: 1.25,
+                      ),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),
                     SizedBox(height: 6.h),
                     Text(
                       'By ${course.instructorName}',
-                      style: AppTextStyles.bodySm.copyWith(color: AppColors.textSecondary),
+                      style: AppTextStyles.bodySm.copyWith(
+                        color: AppColors.textSecondary,
+                      ),
                     ),
                     SizedBox(height: 10.h),
                     Wrap(
@@ -277,10 +303,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
               ),
               SizedBox(width: 12.w),
               Expanded(
-                child: _buildStatTile(
-                  label: 'Access',
-                  value: 'After payment',
-                ),
+                child: _buildStatTile(label: 'Access', value: 'After payment'),
               ),
             ],
           ),
@@ -307,10 +330,17 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
                   child: SizedBox(
                     width: 24.w,
                     height: 24.w,
-                    child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.primary),
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: AppColors.primary,
+                    ),
                   ),
                 ),
-                errorWidget: (context, url, error) => Icon(Icons.school_rounded, color: AppColors.primary, size: 36.sp),
+                errorWidget: (context, url, error) => Icon(
+                  Icons.school_rounded,
+                  color: AppColors.primary,
+                  size: 36.sp,
+                ),
               ),
       ),
     );
@@ -372,7 +402,10 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
           ),
           child: Column(
             children: [
-              _SummaryRow(label: 'Course price', value: '₹${price.toStringAsFixed(0)}'),
+              _SummaryRow(
+                label: 'Course price',
+                value: '₹${price.toStringAsFixed(0)}',
+              ),
               if (hasDiscount) ...[
                 SizedBox(height: 12.h),
                 _SummaryRow(
@@ -382,7 +415,10 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
                 ),
               ],
               SizedBox(height: 12.h),
-              _SummaryRow(label: 'GST (${_gstRate.toStringAsFixed(0)}%)', value: '₹$gstAmount'),
+              _SummaryRow(
+                label: 'GST (${_gstRate.toStringAsFixed(0)}%)',
+                value: '₹$gstAmount',
+              ),
               SizedBox(height: 16.h),
               Divider(color: AppColors.divider, thickness: 1),
               SizedBox(height: 16.h),
@@ -402,7 +438,9 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
                 ),
                 child: Text(
                   'Access is activated after successful payment verification.',
-                  style: AppTextStyles.caption.copyWith(color: AppColors.textSecondary),
+                  style: AppTextStyles.caption.copyWith(
+                    color: AppColors.textSecondary,
+                  ),
                 ),
               ),
             ],
@@ -412,100 +450,10 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
     );
   }
 
-  // ─── Payment Method ────────────────────────────────────────────────
-
-  Widget _buildPaymentMethodSection() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text('Choose payment method', style: AppTextStyles.heading3),
-        SizedBox(height: 12.h),
-        Container(
-          decoration: BoxDecoration(
-            color: AppColors.surface,
-            borderRadius: BorderRadius.circular(AppRadius.lg),
-            border: Border.all(color: AppColors.divider),
-            boxShadow: AppColors.cardShadow,
-          ),
-          child: Column(
-            children: _paymentMethods.asMap().entries.map((entry) {
-              final index = entry.key;
-              final method = entry.value;
-              return Column(
-                children: [
-                  InkWell(
-                    onTap: () => setState(() => _selectedPayment = index),
-                    borderRadius: BorderRadius.circular(AppRadius.md),
-                    child: Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 16.h),
-                      child: Row(
-                        children: [
-                          Container(
-                            width: 48.w,
-                            height: 48.w,
-                            decoration: BoxDecoration(
-                              color: AppColors.inputFill,
-                              borderRadius: BorderRadius.circular(12.r),
-                              border: Border.all(color: AppColors.divider),
-                            ),
-                            child: Icon(method['icon'] as IconData, color: AppColors.primary, size: 22.sp),
-                          ),
-                          SizedBox(width: 14.w),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(method['name'] as String, style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w600)),
-                                SizedBox(height: 2.h),
-                                Text(method['desc'] as String, style: AppTextStyles.caption.copyWith(fontSize: 12.sp)),
-                              ],
-                            ),
-                          ),
-                          _buildRadioIndicator(index),
-                        ],
-                      ),
-                    ),
-                  ),
-                  if (index < _paymentMethods.length - 1) Divider(indent: 72.w, height: 0),
-                ],
-              );
-            }).toList(),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildRadioIndicator(int index) {
-    final isSelected = _selectedPayment == index;
-    return Container(
-      width: 22.w,
-      height: 22.w,
-      decoration: BoxDecoration(
-        color: isSelected ? AppColors.primary : Colors.transparent,
-        shape: BoxShape.circle,
-        border: Border.all(
-          color: isSelected ? AppColors.primary : AppColors.border,
-          width: 2,
-        ),
-      ),
-      child: isSelected
-          ? Center(
-              child: Container(
-                width: 8.w,
-                height: 8.w,
-                decoration: const BoxDecoration(
-                  color: Colors.white,
-                  shape: BoxShape.circle,
-                ),
-              ),
-            )
-          : null,
-    );
-  }
-
   Widget _buildStatusBanner(String message) {
-    final isError = message.toLowerCase().contains('failed') || message.toLowerCase().contains('error');
+    final isError =
+        message.toLowerCase().contains('failed') ||
+        message.toLowerCase().contains('error');
 
     return Container(
       width: double.infinity,
@@ -543,7 +491,11 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
               borderRadius: BorderRadius.circular(AppRadius.md),
               border: Border.all(color: AppColors.divider),
             ),
-            child: Icon(Icons.verified_user_rounded, color: AppColors.success, size: 20.sp),
+            child: Icon(
+              Icons.verified_user_rounded,
+              color: AppColors.success,
+              size: 20.sp,
+            ),
           ),
           SizedBox(width: 12.w),
           Expanded(
@@ -554,7 +506,9 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
                 SizedBox(height: 4.h),
                 Text(
                   'Payments are processed by Razorpay. After verification, your course access opens automatically.',
-                  style: AppTextStyles.bodySm.copyWith(color: AppColors.textSecondary),
+                  style: AppTextStyles.bodySm.copyWith(
+                    color: AppColors.textSecondary,
+                  ),
                 ),
               ],
             ),
@@ -588,15 +542,25 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text('Total payable', style: AppTextStyles.captionMedium.copyWith(fontSize: 12.sp)),
-                Text('₹$finalAmount', style: AppTextStyles.price.copyWith(fontSize: 20.sp)),
+                Text(
+                  'Total payable',
+                  style: AppTextStyles.captionMedium.copyWith(fontSize: 12.sp),
+                ),
+                Text(
+                  '₹$finalAmount',
+                  style: AppTextStyles.price.copyWith(fontSize: 20.sp),
+                ),
               ],
-              ),
+            ),
             SizedBox(height: 12.h),
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
-                onPressed: _isLoadingPaymentConfig || !_isPaymentEnabled || _isLaunchingCheckout || _isVerifyingPayment
+                onPressed:
+                    _isLoadingPaymentConfig ||
+                        !_isPaymentEnabled ||
+                        _isLaunchingCheckout ||
+                        _isVerifyingPayment
                     ? null
                     : () => _startCheckout(course, finalAmount),
                 style: ElevatedButton.styleFrom(
@@ -604,7 +568,9 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
                   foregroundColor: Colors.white,
                   elevation: 0,
                   minimumSize: Size(double.infinity, 56.h),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.md)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(AppRadius.md),
+                  ),
                   padding: EdgeInsets.symmetric(horizontal: 20.w),
                 ),
                 child: Row(
@@ -615,20 +581,31 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
                       SizedBox(
                         width: 18.w,
                         height: 18.w,
-                        child: const CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                        child: const CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.white,
+                        ),
                       ),
                       SizedBox(width: 10.w),
                       Text(
-                        _isVerifyingPayment ? 'Verifying payment' : 'Opening Razorpay',
+                        _isVerifyingPayment
+                            ? 'Verifying payment'
+                            : 'Opening Razorpay',
                         style: AppTextStyles.button.copyWith(fontSize: 15.sp),
                       ),
                     ] else ...[
                       Text(
-                        _isPaymentEnabled ? 'Proceed to pay' : 'Payments disabled',
+                        _isPaymentEnabled
+                            ? 'Proceed to pay'
+                            : 'Payments disabled',
                         style: AppTextStyles.button.copyWith(fontSize: 15.sp),
                       ),
                       SizedBox(width: 8.w),
-                      Icon(Icons.arrow_forward_rounded, size: 20.sp, color: Colors.white),
+                      Icon(
+                        Icons.arrow_forward_rounded,
+                        size: 20.sp,
+                        color: Colors.white,
+                      ),
                     ],
                   ],
                 ),
@@ -650,7 +627,9 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
       setState(() {
         _gstRate = settings.gstRate;
         _isPaymentEnabled = settings.isEnabled;
-        _paymentMessage = settings.isEnabled ? null : 'Payments are disabled by the admin team.';
+        _paymentMessage = settings.isEnabled
+            ? null
+            : 'Payments are disabled by the admin team.';
       });
     } catch (error) {
       if (!mounted) {
@@ -696,13 +675,8 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
         'name': 'Yuva Classes',
         'description': course.title,
         'order_id': order.orderId,
-        'prefill': {
-          'contact': '',
-          'email': '',
-        },
-        'theme': {
-          'color': '#111827',
-        },
+        'prefill': {'contact': '', 'email': ''},
+        'theme': {'color': '#111827'},
       };
 
       _razorpay.open(options);
@@ -833,12 +807,17 @@ class _SummaryRow extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(label, style: isBold ? AppTextStyles.bodyMedium : AppTextStyles.bodySm),
+        Text(
+          label,
+          style: isBold ? AppTextStyles.bodyMedium : AppTextStyles.bodySm,
+        ),
         Text(
           value,
           style: isBold
               ? AppTextStyles.bodyMedium.copyWith(fontSize: 16.sp)
-              : AppTextStyles.bodyMedium.copyWith(color: valueColor ?? AppColors.textPrimary),
+              : AppTextStyles.bodyMedium.copyWith(
+                  color: valueColor ?? AppColors.textPrimary,
+                ),
         ),
       ],
     );
