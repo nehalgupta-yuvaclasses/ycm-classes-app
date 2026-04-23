@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "190674578180",
+    "project_id": "yuvaclasses-app-2026-v1",
+    "storage_bucket": "yuvaclasses-app-2026-v1.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:190674578180:android:68ce4d1b70a27965947e51",
+        "android_client_info": {
+          "package_name": "com.yuva.classes.app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "190674578180-e28tq6rgoo4r7u34ss5kig5566gf5hko.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.yuva.classes.app",
+            "certificate_hash": "6adb0d18f942cae2d193a70c9172e757d5a3f632"
+          }
+        },
+        {
+          "client_id": "190674578180-2jsf78bdc9o72msn324q6b2voffljvbq.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDxItkZl4lrQoqA_zeJHjvouVR1KLEO4oA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "190674578180-2jsf78bdc9o72msn324q6b2voffljvbq.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
